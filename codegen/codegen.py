@@ -137,7 +137,7 @@ def gen_mock_headers(js: Dict) -> None:
         # Add C++ header-guard begin
         fl.write(cppg.add_headerguard_begin(filename))
         # Collect dependent header files
-        fl.write(cppg.add_includes(js['file']['include']))
+        fl.write(cppg.add_includes([header_filename]))
         # Add base class definition
         fl.write(
             cppg.add_class_definition_begin(base_class=module_name,
@@ -148,21 +148,22 @@ def gen_mock_headers(js: Dict) -> None:
                 cppg.add_function_definition(ret_val=apis['return'],
                                              func_name=apis['name'],
                                              arguments=apis['args'],
-                                             doxygen_ready=not mock_class))
+                                             doxygen_ready=not mock_class,
+                                             derived_class=False))
         fl.write(cppg.add_class_definition_end())
 
         # Add derived class definition
         fl.write(
             cppg.add_class_definition_begin(base_class=module_name,
                                             derived_class=filename))
-        """
+
         # Add derived API definition
         for apis in js['file']['api']:
             fl.write(cppg.add_function_definition(ret_val=apis['return'],
                                                   func_name=apis['name'],
                                                   arguments=apis['args'],
+                                                  doxygen_ready=not mock_class,
                                                   derived_class=True))
-        """
 
         fl.write(cppg.add_class_definition_end())
 

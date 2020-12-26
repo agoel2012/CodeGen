@@ -19,12 +19,18 @@ class CppGen(LangGen):
             func_str += " * @return {}\n".format(kwargs['ret_val'])
             func_str += " */"
 
-        if self.mock_attr:
+        if kwargs['derived_class'] is False:
             func_str += "\n virtual "
         else:
             func_str += "\n"
 
-        func_str += "{} {}(".format(kwargs['ret_val'], kwargs['func_name'])
+        if self.mock_attr and kwargs['derived_class'] is True:
+            func_str += "MOCK_METHOD{}({}, {}(".format(
+            len(kwargs['arguments']), kwargs['func_name'],
+            kwargs['ret_val'])
+        else:
+            func_str += "{} {}(".format(kwargs['ret_val'], kwargs['func_name'])
+
         for index, arg in enumerate(kwargs['arguments']):
             if index == len(kwargs['arguments']) - 1:
                 func_str += ("{}".format(arg))
@@ -32,9 +38,16 @@ class CppGen(LangGen):
                 func_str += ("{}, ".format(arg))
 
         if self.mock_attr:
-            func_str += ") = 0;\n"
+            if kwargs['derived_class'] is True:
+                func_str += "));\n"
+            else:
+                func_str += ") = 0;\n"
         else:
-            func_str += ");\n"
+            if kwargs['derived_class'] is True:
+                func_str += ") override;\n"
+            else:
+                func_str += ") = 0;\n"
+
         return func_str
 
     def add_class_definition_begin(self, **kwargs) -> str:
