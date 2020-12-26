@@ -8,6 +8,7 @@ from argparse import Namespace
 from typing import Dict, List
 from collections import defaultdict
 import logging
+from cgen import CGen
 
 AUTHOR = "Arnav Goel"
 GEN_DIR = str(os.getcwd()) + '/gen'
@@ -46,46 +47,6 @@ def parse_json_dict(js: str) -> Dict:
         data = json.load(fl) # Dict[str, str]
     return (data)
 
-def _add_C_copyright() -> str:
-    return "/** Copyright (c) 2020 {} **/\n".format(AUTHOR)
-
-def _add_C_file_doxygen_guard(filename: str) -> str:
-    return "\n/**\n * @file {}\n * @brief Contains datatypes, definitions for {} module \n * @author {} \n */\n".format((filename + ".h"), filename, AUTHOR)
-
-def _add_C_headerguard_begin(filename: str) -> str:
-    return "#ifndef {}_H\n#define {}_H\n".format(filename.upper(), filename.upper())
-
-def _add_C_headerguard_end(filename: str) -> str:
-    return "\n#endif /*! {}_H */\n".format(filename.upper())
-
-def _add_C_function_definition(ret_val: str, func_name: str, arguments: List,
-                               doxygen_ready: bool) -> str:
-    func_str = ""
-    if doxygen_ready:
-        func_str = "\n\n/**\n * @brief {}\n".format(func_name)
-        for index, arg in enumerate(arguments):
-            func_str += " * @param {}\n".format(arg)
-
-        func_str += " * @return {}\n".format(ret_val)
-        func_str += " */"
-
-    func_str += "\n{} {}(".format(ret_val, func_name)
-    for index, arg in enumerate(arguments):
-        if index == len(arguments) - 1:
-            func_str += ("{}".format(arg))
-        else:
-            func_str += ("{}, ".format(arg))
-
-    func_str += ");\n"
-    return func_str
-
-def _add_C_includes(includes: List[str]) -> str:
-    prefix_str = "#include <"
-    suffix_str = ">"
-    updated_includes = [prefix_str + header + suffix_str for header in includes]
-    include_str = "\n".join(updated_includes)
-    return include_str
-
 def gen_headers(js: Dict) -> None:
     """
         0. Create a file with the filename
@@ -103,22 +64,23 @@ def gen_headers(js: Dict) -> None:
 
     # Language specific logic
     if "C" in js['languages']:
+        cg = CGen(AUTHOR)
         with open(abs_file, "w") as fl:
             filename = js['file']['name'].split('.')[0]
             # Add copyright
-            fl.write(_add_C_copyright())
-            fl.write(_add_C_file_doxygen_guard(filename))
+            fl.write(cg.add_copyright())
+            fl.write(cg.add_file_doxygen_guard(filename))
             # Add C header-guard begin
-            fl.write(_add_C_headerguard_begin(filename))
+            fl.write(cg.add_headerguard_begin(filename))
             # Collect dependent header files
-            fl.write(_add_C_includes(js['file']['include']))
+            fl.write(cg.add_includes(js['file']['include']))
             for apis in js['file']['api']:
-                fl.write(_add_C_function_definition(apis['return'],
-                                                    apis['name'],
-                                                    apis['args'],
-                                                    apis['doxygen_ready']))
+                fl.write(cg.add_function_definition(ret_val=apis['return'],
+                                                    func_name=apis['name'],
+                                                    arguments=apis['args'],
+                                                    doxygen_ready=apis['doxygen_ready']))
             # Add C header-guard tail
-            fl.write(_add_C_headerguard_end(filename))
+            fl.write(cg.add_headerguard_end(filename))
 
     if "C++" in js['languages']:
         raise NotImplementedError("No support for C++ class headers")
