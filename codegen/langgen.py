@@ -50,3 +50,15 @@ class LangGen:
         raise NotImplementedError(
             "{0} language specific feature not supported".format(
                 self.language))
+
+    @abstractmethod
+    def add_extern_object_definition(self, **kwargs) -> str:
+        raise NotImplementedError(
+            "{0} language specific feature not supported".format(
+                self.language))
+
+    @abstractmethod
+    def add_function_implementation(self, **kwargs) -> str:
+        raise NotImplementedError(
+            "{0} language specific feature not supported".format(
+                self.language))

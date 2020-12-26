@@ -57,6 +57,10 @@ def parse_json_dict(js: str) -> Dict:
     return (data)
 
 
+def display_dict(d: Dict) -> None:
+    logging.debug(json.dumps(d))
+
+
 def gen_headers(js: Dict) -> None:
     """
         0. Create a file with the filename
@@ -100,6 +104,12 @@ def gen_headers(js: Dict) -> None:
         fl.write(cg.add_headerguard_end(filename))
 
 
+def _to_pascal_case(header_filename: str) -> str:
+    module_words = (header_filename.split('.')[0]).split('_')
+    module_words = [word.title() for word in module_words]
+    return "".join(module_words) + "." + header_filename.split('.')[1]
+
+
 def gen_mock_headers(js: Dict) -> None:
     """
         0. Create a file with the filename
@@ -120,10 +130,7 @@ def gen_mock_headers(js: Dict) -> None:
             js['file']['name']))
         return
 
-    header_filename = js['file']['name']
-    module_words = (header_filename.split('.')[0]).split('_')
-    module_words = [word.title() for word in module_words]
-    module_name = "".join(module_words)
+    module_name = _to_pascal_case(js['file']['name']).split('.')[0]
     mock_class = True
     mockheader_filename = "Mock" + module_name + ".hpp"
     abs_file = GEN_DIR + "/" + mockheader_filename
@@ -137,7 +144,7 @@ def gen_mock_headers(js: Dict) -> None:
         # Add C++ header-guard begin
         fl.write(cppg.add_headerguard_begin(filename))
         # Collect dependent header files
-        fl.write(cppg.add_includes([header_filename]))
+        fl.write(cppg.add_includes([js['file']['name']]))
         # Add base class definition
         fl.write(
             cppg.add_class_definition_begin(base_class=module_name,
@@ -172,12 +179,44 @@ def gen_mock_headers(js: Dict) -> None:
         fl.write(cppg.add_headerguard_end(filename))
 
 
-def gen_sources(js: Dict) -> None:
-    pass
+def gen_mock_sources(js: Dict) -> None:
+    """
+        0. Create a file with the filename
+        1. Add copyright header
+        2. Build a collection of api specific include files and attach them
+        3. Iterate through all API and add stub implementation
+    """
+    # Make the generated header directory
+    if not os.path.exists(GEN_DIR):
+        os.mkdir(GEN_DIR)
+    if js['file']['gmock_ready'] is False:
+        logging.info("Skipping mock source generator for {}".format(
+            js['file']['name']))
+        return
 
-
-def display_dict(d: Dict) -> None:
-    logging.debug(json.dumps(d))
+    module_name = _to_pascal_case(js['file']['name']).split('.')[0]
+    mocksource_filename = "Mock" + module_name + ".cpp"
+    abs_file = GEN_DIR + "/" + mocksource_filename
+    logging.info("Generating gMock C++ header: {}".format(abs_file))
+    cppg = CppGen(AUTHOR, True)
+    with open(abs_file, "w") as fl:
+        # Add copyright
+        fl.write(cppg.add_copyright())
+        fl.write(cppg.add_file_doxygen_guard(module_name))
+        # Collect dependent header files
+        # TODO: Fix this "extern assumption as this is C++ source"
+        fl.write(
+            cppg.add_includes([mocksource_filename.split('.')[0] + ".hpp"]))
+        # Add Mock class Ptr extern definition
+        fl.write(cppg.add_extern_object_definition(base_class=module_name))
+        # Add base API definition
+        for apis in js['file']['api']:
+            fl.write(
+                cppg.add_function_implementation(ret_val=apis['return'],
+                                                 func_name=apis['name'],
+                                                 arguments=apis['args'],
+                                                 doxygen_ready=False,
+                                                 derived_class=False))
 
 
 def main() -> None:
@@ -187,8 +226,8 @@ def main() -> None:
         json_dict = parse_json_dict(args.json_file)
         display_dict(json_dict)
         gen_headers(json_dict)
-        gen_sources(json_dict)
         gen_mock_headers(json_dict)
+        gen_mock_sources(json_dict)
 
 
 if __name__ == '__main__':
