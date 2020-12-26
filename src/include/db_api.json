@@ -8,6 +8,7 @@
                     "return" : "int",
                     "args"    : ["const void *key", "size_t *count"],
                     "doxygen_ready" : true,
+                    "gmock_ready" : false,
                     "source_ready" : false
                 },
                 {
@@ -15,8 +16,8 @@
                     "return" : "int",
                     "args"    : ["const void *key", "void **value"],
                     "doxygen_ready" : true,
-                    "source_ready" : false
+                    "source_ready" : false,
+                    "gmock_ready" : false
                 }]
-    },
-    "gmock_ready" : false
+    }
 }

@@ -9,6 +9,7 @@ from typing import Dict, List
 from collections import defaultdict
 import logging
 
+AUTHOR = "Arnav Goel"
 GEN_DIR = str(os.getcwd()) + '/gen'
 
 LOG_LEVELS = {
@@ -46,7 +47,10 @@ def parse_json_dict(js: str) -> Dict:
     return (data)
 
 def _add_C_copyright() -> str:
-    return "/** Copyright (c) 2020 Arnav Goel **/\n"
+    return "/** Copyright (c) 2020 {} **/\n".format(AUTHOR)
+
+def _add_C_file_doxygen_guard(filename: str) -> str:
+    return "\n/**\n * @file {}\n * @brief Contains datatypes, definitions for {} module \n * @author {} \n */\n".format((filename + ".h"), filename, AUTHOR)
 
 def _add_C_headerguard_begin(filename: str) -> str:
     return "#ifndef {}_H\n#define {}_H\n".format(filename.upper(), filename.upper())
@@ -100,9 +104,10 @@ def gen_headers(js: Dict) -> None:
     # Language specific logic
     if "C" in js['languages']:
         with open(abs_file, "w") as fl:
+            filename = js['file']['name'].split('.')[0]
             # Add copyright
             fl.write(_add_C_copyright())
-            filename = js['file']['name'].split('.')[0]
+            fl.write(_add_C_file_doxygen_guard(filename))
             # Add C header-guard begin
             fl.write(_add_C_headerguard_begin(filename))
             # Collect dependent header files
@@ -118,12 +123,14 @@ def gen_headers(js: Dict) -> None:
     if "C++" in js['languages']:
         raise NotImplementedError("No support for C++ class headers")
 
+def gen_mock_headers(js: Dict) -> None:
+    pass
+
 def gen_sources(js: Dict) -> None:
     pass
 
 def display_dict(d: Dict) -> None:
-    for k, v in d.items():
-        logging.debug("key: {}, value: {}".format(k, v))
+    logging.debug(json.dumps(d))
 
 def main() -> None:
     args = parse_args()
@@ -133,6 +140,7 @@ def main() -> None:
         display_dict(json_dict)
         gen_headers(json_dict)
         gen_sources(json_dict)
+        gen_mock_headers(json_dict)
 
 
 if __name__ == '__main__':
