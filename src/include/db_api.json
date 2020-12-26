@@ -1,11 +1,22 @@
 {
     "languages": ["C"],
-    "api" : {
-                "return" : "int",
-                "name"   : "db_api_get_entries",
-                "args"    : ["const void *key", "size_t *count"],
-                "include" : ["inttypes.h", "stdint.h"],
-                "doxygen_ready" : false
-            },
+    "file": {
+        "name" : "db_api.h",
+        "include" : ["inttypes.h", "stdint.h"],
+        "api" : [{
+                    "name"   : "db_api_get_count",
+                    "return" : "int",
+                    "args"    : ["const void *key", "size_t *count"],
+                    "doxygen_ready" : true,
+                    "source_ready" : false
+                },
+                {
+                    "name"   : "db_api_get_entry",
+                    "return" : "int",
+                    "args"    : ["const void *key", "void **value"],
+                    "doxygen_ready" : true,
+                    "source_ready" : false
+                }]
+    },
     "gmock_ready" : false
 }
