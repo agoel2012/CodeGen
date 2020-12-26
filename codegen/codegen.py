@@ -16,37 +16,46 @@ GEN_DIR = str(os.getcwd()) + '/gen'
 
 LOG_LEVELS = {
     'DEBUG': logging.DEBUG,
-    'INFO' : logging.INFO,
-    'WARNING' : logging.WARNING,
-    'ERROR' : logging.ERROR,
-    'CRITICAL' : logging.CRITICAL
+    'INFO': logging.INFO,
+    'WARNING': logging.WARNING,
+    'ERROR': logging.ERROR,
+    'CRITICAL': logging.CRITICAL
 }
 
+
 def parse_args() -> Namespace:
-    parser = argparse.ArgumentParser(description='Generate C/C++ sources from JSON schema')
-    parser.add_argument('--json-file', type=str,
+    parser = argparse.ArgumentParser(
+        description='Generate C/C++ sources from JSON schema')
+    parser.add_argument('--json-file',
+                        type=str,
                         help='path to JSON schema file')
-    parser.add_argument('--log-level', type=str,
+    parser.add_argument('--log-level',
+                        type=str,
                         default='INFO',
                         choices=LOG_LEVELS.keys(),
                         help='Log level for the script')
     args = parser.parse_args()
     return args
 
+
 def setup_logging(level_str: str):
     log_level = LOG_LEVELS.get(level_str, None)
     log_params = {
-        'level' : log_level,
-        'format' : '%(asctime)s__[%(levelname)s, %(module)s.%(funcName)s](%(name)s)__[L%(lineno)d] %(message)s'
+        'level':
+        log_level,
+        'format':
+        '%(asctime)s__[%(levelname)s, %(module)s.%(funcName)s](%(name)s)__[L%(lineno)d] %(message)s'
     }
 
     logging.basicConfig(**log_params)
 
+
 def parse_json_dict(js: str) -> Dict:
     logging.info("JSON Schema to process: {0}".format(js))
     with open(js) as fl:
-        data = json.load(fl) # Dict[str, str]
+        data = json.load(fl)  # Dict[str, str]
     return (data)
+
 
 def gen_headers(js: Dict) -> None:
     """
@@ -65,7 +74,9 @@ def gen_headers(js: Dict) -> None:
 
     # Language specific logic
     if "C" != js['file']['language']:
-        raise NotImplementedError("No support for {} language specific codegen".format(js['file']['language']))
+        raise NotImplementedError(
+            "No support for {} language specific codegen".format(
+                js['file']['language']))
 
     logging.info("Generating C header: {}".format(abs_file))
     cg = CGen(AUTHOR)
@@ -79,12 +90,15 @@ def gen_headers(js: Dict) -> None:
         # Collect dependent header files
         fl.write(cg.add_includes(js['file']['include']))
         for apis in js['file']['api']:
-            fl.write(cg.add_function_definition(ret_val=apis['return'],
-                                                func_name=apis['name'],
-                                                arguments=apis['args'],
-                                                doxygen_ready=apis['doxygen_ready']))
+            fl.write(
+                cg.add_function_definition(
+                    ret_val=apis['return'],
+                    func_name=apis['name'],
+                    arguments=apis['args'],
+                    doxygen_ready=apis['doxygen_ready']))
         # Add C header-guard tail
         fl.write(cg.add_headerguard_end(filename))
+
 
 def gen_mock_headers(js: Dict) -> None:
     """
@@ -102,7 +116,8 @@ def gen_mock_headers(js: Dict) -> None:
     if not os.path.exists(GEN_DIR):
         os.mkdir(GEN_DIR)
     if js['file']['gmock_ready'] is False:
-        logging.info("Skipping mock header generator for {}".format(js['file']['name']))
+        logging.info("Skipping mock header generator for {}".format(
+            js['file']['name']))
         return
 
     header_filename = js['file']['name']
@@ -124,20 +139,22 @@ def gen_mock_headers(js: Dict) -> None:
         # Collect dependent header files
         fl.write(cppg.add_includes(js['file']['include']))
         # Add base class definition
-        fl.write(cppg.add_class_definition_begin(base_class=module_name,
-                                                 derived_class=None))
+        fl.write(
+            cppg.add_class_definition_begin(base_class=module_name,
+                                            derived_class=None))
         # Add base API definition
         for apis in js['file']['api']:
-            fl.write(cppg.add_function_definition(ret_val=apis['return'],
-                                                func_name=apis['name'],
-                                                arguments=apis['args'],
-                                                doxygen_ready=not mock_class))
+            fl.write(
+                cppg.add_function_definition(ret_val=apis['return'],
+                                             func_name=apis['name'],
+                                             arguments=apis['args'],
+                                             doxygen_ready=not mock_class))
         fl.write(cppg.add_class_definition_end())
 
         # Add derived class definition
-        fl.write(cppg.add_class_definition_begin(base_class=module_name,
-                                                 derived_class=filename))
-
+        fl.write(
+            cppg.add_class_definition_begin(base_class=module_name,
+                                            derived_class=filename))
         """
         # Add derived API definition
         for apis in js['file']['api']:
@@ -156,8 +173,10 @@ def gen_mock_headers(js: Dict) -> None:
 def gen_sources(js: Dict) -> None:
     pass
 
+
 def display_dict(d: Dict) -> None:
     logging.debug(json.dumps(d))
+
 
 def main() -> None:
     args = parse_args()
@@ -172,5 +191,5 @@ def main() -> None:
 
 if __name__ == '__main__':
     py_ver = (sys.version_info.major, sys.version_info.minor)
-    assert py_ver >= (3,7)
+    assert py_ver >= (3, 7)
     main()

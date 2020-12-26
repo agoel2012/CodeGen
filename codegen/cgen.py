@@ -3,6 +3,7 @@
 from langgen import LangGen
 from typing import List
 
+
 class CGen(LangGen):
     def __init__(self, author):
         super().__init__(author, "C", ".h")
@@ -30,6 +31,8 @@ class CGen(LangGen):
     def add_includes(self, includes: List[str]) -> str:
         prefix_str = "#include <"
         suffix_str = ">"
-        updated_includes = [prefix_str + header + suffix_str for header in includes]
+        updated_includes = [
+            prefix_str + header + suffix_str for header in includes
+        ]
         include_str = "\n".join(updated_includes)
         return include_str
