@@ -1,0 +1,11 @@
+{
+    "languages": ["C"],
+    "api" : {
+                "return" : "int",
+                "name"   : "db_api_get_entries",
+                "args"    : ["const void *key", "size_t *count"],
+                "include" : ["inttypes.h", "stdint.h"],
+                "doxygen_ready" : false
+            },
+    "gmock_ready" : false
+}
