@@ -109,10 +109,11 @@ def gen_mock_headers(js: Dict) -> None:
     module_words = (header_filename.split('.')[0]).split('_')
     module_words = [word.title() for word in module_words]
     module_name = "".join(module_words)
+    mock_class = True
     mockheader_filename = "Mock" + module_name + ".hpp"
     abs_file = GEN_DIR + "/" + mockheader_filename
     logging.info("Generating gMock C++ header: {}".format(abs_file))
-    cppg = CppGen(AUTHOR, True)
+    cppg = CppGen(AUTHOR, mock_class)
     with open(abs_file, "w") as fl:
         filename = mockheader_filename.split('.')[0]
         # Add copyright
@@ -122,13 +123,32 @@ def gen_mock_headers(js: Dict) -> None:
         fl.write(cppg.add_headerguard_begin(filename))
         # Collect dependent header files
         fl.write(cppg.add_includes(js['file']['include']))
-        fl.write(cppg.add_class_definition_begin(module_name))
+        # Add base class definition
+        fl.write(cppg.add_class_definition_begin(base_class=module_name,
+                                                 derived_class=None))
+        # Add base API definition
         for apis in js['file']['api']:
             fl.write(cppg.add_function_definition(ret_val=apis['return'],
                                                 func_name=apis['name'],
                                                 arguments=apis['args'],
-                                                doxygen_ready=False))
+                                                doxygen_ready=not mock_class))
         fl.write(cppg.add_class_definition_end())
+
+        # Add derived class definition
+        fl.write(cppg.add_class_definition_begin(base_class=module_name,
+                                                 derived_class=filename))
+
+        """
+        # Add derived API definition
+        for apis in js['file']['api']:
+            fl.write(cppg.add_function_definition(ret_val=apis['return'],
+                                                  func_name=apis['name'],
+                                                  arguments=apis['args'],
+                                                  derived_class=True))
+        """
+
+        fl.write(cppg.add_class_definition_end())
+
         # Add C header-guard tail
         fl.write(cppg.add_headerguard_end(filename))
 

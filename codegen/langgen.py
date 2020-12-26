@@ -32,7 +32,7 @@ class LangGen:
         raise NotImplementedError("{0} language specific feature not supported".format(self.language))
 
     @abstractmethod
-    def add_class_definition_begin(self, class_name: str) -> str:
+    def add_class_definition_begin(self, **kwargs) -> str:
         raise NotImplementedError("{0} language specific feature not supported".format(self.language))
 
     @abstractmethod

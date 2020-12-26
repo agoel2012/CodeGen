@@ -37,14 +37,18 @@ class CppGen(LangGen):
         return func_str
 
 
-    def add_class_definition_begin(self, class_name: str) -> str:
-        class_str = "\nclass {0}".format(class_name)
+    def add_class_definition_begin(self, **kwargs) -> str:
+        if kwargs.get('derived_class', None) is None:
+            class_str = "\nclass {0}".format(kwargs['base_class'])
+        else:
+            class_str = "\nclass {0} : public {1}".format(kwargs['derived_class'], kwargs['base_class'])
+
         class_str += " {\n public: \n"
         if self.mock_attr:
-            class_str += " virtual ~{0}() ".format(class_name)
+            class_str += " virtual ~{0}() ".format(kwargs['base_class'] if kwargs.get('derived_class', None) is None else kwargs['derived_class'])
             class_str += " {}\n"
-        return class_str
 
+        return class_str
 
     def add_class_definition_end(self) -> str:
        return "\n};\n"
