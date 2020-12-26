@@ -1,2 +1,2 @@
 # CodeGen
-C/C++ Source Code Generator for GMock/GTest stub class/header files
+C/C++ Source Code Generator based on JSON schema
