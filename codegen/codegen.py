@@ -159,11 +159,12 @@ def gen_mock_headers(js: Dict) -> None:
 
         # Add derived API definition
         for apis in js['file']['api']:
-            fl.write(cppg.add_function_definition(ret_val=apis['return'],
-                                                  func_name=apis['name'],
-                                                  arguments=apis['args'],
-                                                  doxygen_ready=not mock_class,
-                                                  derived_class=True))
+            fl.write(
+                cppg.add_function_definition(ret_val=apis['return'],
+                                             func_name=apis['name'],
+                                             arguments=apis['args'],
+                                             doxygen_ready=not mock_class,
+                                             derived_class=True))
 
         fl.write(cppg.add_class_definition_end())
 

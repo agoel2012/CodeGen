@@ -26,8 +26,8 @@ class CppGen(LangGen):
 
         if self.mock_attr and kwargs['derived_class'] is True:
             func_str += "MOCK_METHOD{}({}, {}(".format(
-            len(kwargs['arguments']), kwargs['func_name'],
-            kwargs['ret_val'])
+                len(kwargs['arguments']), kwargs['func_name'],
+                kwargs['ret_val'])
         else:
             func_str += "{} {}(".format(kwargs['ret_val'], kwargs['func_name'])
 
