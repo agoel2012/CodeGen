@@ -9,6 +9,7 @@ from typing import Dict, List
 from collections import defaultdict
 import logging
 from cgen import CGen
+from cppgen import CppGen
 
 AUTHOR = "Arnav Goel"
 GEN_DIR = str(os.getcwd()) + '/gen'
@@ -63,30 +64,74 @@ def gen_headers(js: Dict) -> None:
     abs_file = GEN_DIR + "/" + js['file']['name']
 
     # Language specific logic
-    if "C" in js['languages']:
-        cg = CGen(AUTHOR)
-        with open(abs_file, "w") as fl:
-            filename = js['file']['name'].split('.')[0]
-            # Add copyright
-            fl.write(cg.add_copyright())
-            fl.write(cg.add_file_doxygen_guard(filename))
-            # Add C header-guard begin
-            fl.write(cg.add_headerguard_begin(filename))
-            # Collect dependent header files
-            fl.write(cg.add_includes(js['file']['include']))
-            for apis in js['file']['api']:
-                fl.write(cg.add_function_definition(ret_val=apis['return'],
-                                                    func_name=apis['name'],
-                                                    arguments=apis['args'],
-                                                    doxygen_ready=apis['doxygen_ready']))
-            # Add C header-guard tail
-            fl.write(cg.add_headerguard_end(filename))
+    if "C" != js['file']['language']:
+        raise NotImplementedError("No support for {} language specific codegen".format(js['file']['language']))
 
-    if "C++" in js['languages']:
-        raise NotImplementedError("No support for C++ class headers")
+    logging.info("Generating C header: {}".format(abs_file))
+    cg = CGen(AUTHOR)
+    with open(abs_file, "w") as fl:
+        filename = js['file']['name'].split('.')[0]
+        # Add copyright
+        fl.write(cg.add_copyright())
+        fl.write(cg.add_file_doxygen_guard(filename))
+        # Add C header-guard begin
+        fl.write(cg.add_headerguard_begin(filename))
+        # Collect dependent header files
+        fl.write(cg.add_includes(js['file']['include']))
+        for apis in js['file']['api']:
+            fl.write(cg.add_function_definition(ret_val=apis['return'],
+                                                func_name=apis['name'],
+                                                arguments=apis['args'],
+                                                doxygen_ready=apis['doxygen_ready']))
+        # Add C header-guard tail
+        fl.write(cg.add_headerguard_end(filename))
 
 def gen_mock_headers(js: Dict) -> None:
-    pass
+    """
+        0. Create a file with the filename
+        1. Add copyright header
+        2. Add boilerplate pragma/header-guards
+        3. Build a collection of api specific include files and attach them
+        4. Add abstract mock class definition
+            4.1. Iterate through all API and add definitions
+        5. Add derived mock class definition
+            5.1. Iterate through all API and add definitions
+        6. Attach end-of-file header-guards
+    """
+    # Make the generated header directory
+    if not os.path.exists(GEN_DIR):
+        os.mkdir(GEN_DIR)
+    if js['file']['gmock_ready'] is False:
+        logging.info("Skipping mock header generator for {}".format(js['file']['name']))
+        return
+
+    header_filename = js['file']['name']
+    module_words = (header_filename.split('.')[0]).split('_')
+    module_words = [word.title() for word in module_words]
+    module_name = "".join(module_words)
+    mockheader_filename = "Mock" + module_name + ".hpp"
+    abs_file = GEN_DIR + "/" + mockheader_filename
+    logging.info("Generating Mock header: {}".format(abs_file))
+    cppg = CppGen(AUTHOR, True)
+    with open(abs_file, "w") as fl:
+        filename = mockheader_filename.split('.')[0]
+        # Add copyright
+        fl.write(cppg.add_copyright())
+        fl.write(cppg.add_file_doxygen_guard(filename))
+        # Add C++ header-guard begin
+        fl.write(cppg.add_headerguard_begin(filename))
+        # Collect dependent header files
+        fl.write(cppg.add_includes(js['file']['include']))
+        fl.write(cppg.add_class_definition_begin(module_name))
+        for apis in js['file']['api']:
+            fl.write(cppg.add_function_definition(ret_val=apis['return'],
+                                                func_name=apis['name'],
+                                                arguments=apis['args'],
+                                                doxygen_ready=False))
+        fl.write(cppg.add_class_definition_end())
+        # Add C header-guard tail
+        fl.write(cppg.add_headerguard_end(filename))
+
 
 def gen_sources(js: Dict) -> None:
     pass

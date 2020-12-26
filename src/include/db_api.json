@@ -1,6 +1,7 @@
 {
-    "languages": ["C"],
     "file": {
+        "gmock_ready" : true,
+        "language": "C",
         "name" : "db_api.h",
         "include" : ["inttypes.h", "stdint.h"],
         "api" : [{
@@ -8,7 +9,6 @@
                     "return" : "int",
                     "args"    : ["db_handle_t handle", "const void *key", "void *value"],
                     "doxygen_ready" : true,
-                    "gmock_ready" : false,
                     "source_ready" : false
                 },
                 {
@@ -16,15 +16,13 @@
                     "return" : "int",
                     "args"    : ["db_handle_t handle", "const void *key", "void **value"],
                     "doxygen_ready" : true,
-                    "source_ready" : false,
-                    "gmock_ready" : false
+                    "source_ready" : false
                 },
                 {
                     "name"   : "db_init",
                     "return" : "db_handle_t",
                     "args"   : [],
                     "doxygen_ready" : true,
-                    "gmock_ready" : false,
                     "source_ready" : false
                 }]
     }

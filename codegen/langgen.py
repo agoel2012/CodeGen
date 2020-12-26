@@ -25,8 +25,15 @@ class LangGen:
 
     @abstractmethod
     def add_function_definition(self, **kwargs) -> str:
-        raise NotImplementedError("{0} language specific function def gen not supported".format(self.language))
+        raise NotImplementedError("{0} language specific feature not supported".format(self.language))
 
     @abstractmethod
     def add_includes(self, includes: List[str]) -> str:
-        raise NotImplementedError("{0} language specific include gen not supported".format(self.language))
+        raise NotImplementedError("{0} language specific feature not supported".format(self.language))
+
+    @abstractmethod
+    def add_class_definition_begin(self, class_name: str) -> str:
+        raise NotImplementedError("{0} language specific feature not supported".format(self.language))
+
+    def add_class_definition_end(self) -> str:
+        raise NotImplementedError("{0} language specific feature not supported".format(self.language))
