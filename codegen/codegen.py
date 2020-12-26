@@ -111,7 +111,7 @@ def gen_mock_headers(js: Dict) -> None:
     module_name = "".join(module_words)
     mockheader_filename = "Mock" + module_name + ".hpp"
     abs_file = GEN_DIR + "/" + mockheader_filename
-    logging.info("Generating Mock header: {}".format(abs_file))
+    logging.info("Generating gMock C++ header: {}".format(abs_file))
     cppg = CppGen(AUTHOR, True)
     with open(abs_file, "w") as fl:
         filename = mockheader_filename.split('.')[0]
