@@ -37,9 +37,10 @@ def parse_args() -> Namespace:
     parser.add_argument('--gen-c-header',
                         action='store_true',
                         help='Generate C header file from JSON schema')
-    parser.add_argument('--gen-mock-cpp',
-                        action='store_true',
-                        help='Generate C++ gMock header & sources from JSON schema')
+    parser.add_argument(
+        '--gen-mock-cpp',
+        action='store_true',
+        help='Generate C++ gMock header & sources from JSON schema')
     args = parser.parse_args()
     return args
 
@@ -141,7 +142,7 @@ def gen_mock_headers(js: Dict) -> None:
     mockheader_filename = "Mock" + module_name + ".hpp"
     abs_file = GEN_DIR + "/" + mockheader_filename
     logging.info("Generating gMock C++ header: {}".format(abs_file))
-    cppg = CppGen(AUTHOR, mock_class)
+    cppg = CppGen(AUTHOR, ".hpp", mock_class)
     with open(abs_file, "w") as fl:
         filename = mockheader_filename.split('.')[0]
         # Add copyright
@@ -203,18 +204,18 @@ def gen_mock_sources(js: Dict) -> None:
     module_name = _to_pascal_case(js['file']['name']).split('.')[0]
     mocksource_filename = "Mock" + module_name + ".cpp"
     abs_file = GEN_DIR + "/" + mocksource_filename
-    logging.info("Generating gMock C++ header: {}".format(abs_file))
-    cppg = CppGen(AUTHOR, True)
+    logging.info("Generating gMock C++ source: {}".format(abs_file))
+    cppg = CppGen(AUTHOR, ".cpp", True)
     with open(abs_file, "w") as fl:
+        filename = mocksource_filename.split('.')[0]
         # Add copyright
         fl.write(cppg.add_copyright())
-        fl.write(cppg.add_file_doxygen_guard(module_name))
+        fl.write(cppg.add_file_doxygen_guard(filename))
         # Collect dependent header files
+        fl.write(cppg.add_includes([filename + ".hpp"], bypass_extern=True))
         # TODO: Fix this "extern assumption as this is C++ source"
-        fl.write(
-            cppg.add_includes([mocksource_filename.split('.')[0] + ".hpp"]))
         # Add Mock class Ptr extern definition
-        fl.write(cppg.add_extern_object_definition(base_class=module_name))
+        fl.write(cppg.add_extern_object_definition(class_name=filename))
         # Add base API definition
         for apis in js['file']['api']:
             fl.write(
@@ -222,7 +223,8 @@ def gen_mock_sources(js: Dict) -> None:
                                                  func_name=apis['name'],
                                                  arguments=apis['args'],
                                                  doxygen_ready=False,
-                                                 derived_class=False))
+                                                 derived_class=False,
+                                                 class_name=filename))
 
 
 def main() -> None:
@@ -234,7 +236,8 @@ def main() -> None:
             display_dict(json_dict)
 
         if not args.gen_c_header and not args.gen_mock_cpp:
-            raise RuntimeError('Select atleast one or more of C and gMock codegen option')
+            raise RuntimeError(
+                'Select atleast one or more of C and gMock codegen option')
 
         if args.gen_c_header:
             gen_headers(json_dict)

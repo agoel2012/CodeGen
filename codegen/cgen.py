@@ -13,7 +13,8 @@ class CGen(LangGen):
         if kwargs['doxygen_ready'] is True:
             func_str = "\n\n/**\n * @brief {}\n".format(kwargs['func_name'])
             for index, arg in enumerate(kwargs['arguments']):
-                func_str += " * @param {}\n".format(arg)
+                func_str += " * @param {} {}\n".format(arg['dtype'],
+                                                       arg['value'])
 
             func_str += " * @return {}\n".format(kwargs['ret_val'])
             func_str += " */"
@@ -21,9 +22,9 @@ class CGen(LangGen):
         func_str += "\n{} {}(".format(kwargs['ret_val'], kwargs['func_name'])
         for index, arg in enumerate(kwargs['arguments']):
             if index == len(kwargs['arguments']) - 1:
-                func_str += ("{}".format(arg))
+                func_str += ("{} {}".format(arg['dtype'], arg['value']))
             else:
-                func_str += ("{}, ".format(arg))
+                func_str += ("{} {}, ".format(arg['dtype'], arg['value']))
 
         func_str += ");\n"
         return func_str

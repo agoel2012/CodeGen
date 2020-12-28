@@ -5,16 +5,17 @@ from typing import List
 
 
 class CppGen(LangGen):
-    def __init__(self, author="", mock_attr=False):
+    def __init__(self, author="", ext="", mock_attr=False):
         self.mock_attr = mock_attr
-        super().__init__(author, "C++", ".hpp")
+        super().__init__(author, "C++", ext)
 
     def add_function_definition(self, **kwargs) -> str:
         func_str = ""
         if kwargs['doxygen_ready'] is True:
             func_str = "\n\n/**\n * @brief {}\n".format(kwargs['func_name'])
             for index, arg in enumerate(kwargs['arguments']):
-                func_str += " * @param {}\n".format(arg)
+                func_str += " * @param {} {}\n".format(arg['dtype'],
+                                                       arg['value'])
 
             func_str += " * @return {}\n".format(kwargs['ret_val'])
             func_str += " */"
@@ -33,9 +34,9 @@ class CppGen(LangGen):
 
         for index, arg in enumerate(kwargs['arguments']):
             if index == len(kwargs['arguments']) - 1:
-                func_str += ("{}".format(arg))
+                func_str += ("{} {}".format(arg['dtype'], arg['value']))
             else:
-                func_str += ("{}, ".format(arg))
+                func_str += ("{} {}, ".format(arg['dtype'], arg['value']))
 
         if self.mock_attr:
             if kwargs['derived_class'] is True:
@@ -69,11 +70,11 @@ class CppGen(LangGen):
     def add_class_definition_end(self) -> str:
         return "\n};\n"
 
-    def add_includes(self, includes: List[str]) -> str:
+    def add_includes(self, includes: List[str], bypass_extern=False) -> str:
         include_str = ""
         begin_encap = ""
-        end_encap = ""
-        if self.mock_attr:
+        end_encap = "\n"
+        if self.mock_attr and not bypass_extern:
             include_str += "\n#include <gmock/gmock.hpp>\n#include <gtest/gtest.hpp>\n"
             begin_encap = "\nextern \"C\" {\n"
             end_encap = "\n}\n"
@@ -87,3 +88,27 @@ class CppGen(LangGen):
         include_str += "\n".join(updated_includes)
         include_str += end_encap
         return include_str
+
+    def add_extern_object_definition(self, class_name: str) -> str:
+        return "extern {0} *{0}Ptr; \n".format(class_name)
+
+    def add_function_implementation(self, **kwargs) -> str:
+        func_str = "\n{} {}(".format(kwargs['ret_val'], kwargs['func_name'])
+        for index, arg in enumerate(kwargs['arguments']):
+            if index == len(kwargs['arguments']) - 1:
+                func_str += ("{} {}".format(arg['dtype'], arg['value']))
+            else:
+                func_str += ("{} {}, ".format(arg['dtype'], arg['value']))
+
+        func_str += ") {\n"
+        func_body = "return {}Ptr->{}(".format(kwargs['class_name'],
+                                               kwargs['func_name'])
+        for index, arg in enumerate(kwargs['arguments']):
+            if index == len(kwargs['arguments']) - 1:
+                func_body += ("{}".format(arg['value']))
+            else:
+                func_body += ("{}, ".format(arg['value']))
+
+        func_body += "); \n}\n\n"
+
+        return func_str + func_body

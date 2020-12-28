@@ -7,14 +7,34 @@
         "api" : [{
                     "name"   : "db_api_set_entry",
                     "return" : "int",
-                    "args"    : ["db_handle_t handle", "const void *key", "void *value"],
+                    "args"    : [{
+                        "dtype" : "db_handle_t",
+                        "value" : "handle"
+                    },
+                    {
+                        "dtype" : "const void *",
+                        "value" : "key"
+                    },
+                    {   "dtype" : "void *",
+                        "value" : "value"
+                    }],
                     "doxygen_ready" : true,
                     "source_ready" : false
                 },
                 {
                     "name"   : "db_api_get_entry",
                     "return" : "int",
-                    "args"    : ["db_handle_t handle", "const void *key", "void **value"],
+                    "args"    : [{
+                        "dtype" : "db_handle_t",
+                        "value" : "handle"
+                    },
+                    {
+                        "dtype" : "const void *",
+                        "value" : "key"
+                    },
+                    {   "dtype" : "void **",
+                        "value" : "value"
+                    }],
                     "doxygen_ready" : true,
                     "source_ready" : false
                 },
