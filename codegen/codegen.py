@@ -34,6 +34,12 @@ def parse_args() -> Namespace:
                         default='INFO',
                         choices=LOG_LEVELS.keys(),
                         help='Log level for the script')
+    parser.add_argument('--gen-c-header',
+                        action='store_true',
+                        help='Generate C header file from JSON schema')
+    parser.add_argument('--gen-mock-cpp',
+                        action='store_true',
+                        help='Generate C++ gMock header & sources from JSON schema')
     args = parser.parse_args()
     return args
 
@@ -224,10 +230,20 @@ def main() -> None:
     setup_logging(args.log_level)
     if os.path.exists(args.json_file):
         json_dict = parse_json_dict(args.json_file)
-        display_dict(json_dict)
-        gen_headers(json_dict)
-        gen_mock_headers(json_dict)
-        gen_mock_sources(json_dict)
+        if args.log_level == 'DEBUG':
+            display_dict(json_dict)
+
+        if not args.gen_c_header and not args.gen_mock_cpp:
+            raise RuntimeError('Select atleast one or more of C and gMock codegen option')
+
+        if args.gen_c_header:
+            gen_headers(json_dict)
+
+        if args.gen_mock_cpp:
+            gen_mock_headers(json_dict)
+            gen_mock_sources(json_dict)
+    else:
+        raise IOError('JSON file {} not found'.format(args.json_file))
 
 
 if __name__ == '__main__':
